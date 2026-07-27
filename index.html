@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Morning Prayer</title>
+<style>
+  :root{
+    --text: #332A22;
+    --muted: #5C5044;
+    --maroon: #6D2C3A;
+    --maroon-dark: #571F2B;
+    --gold: #B3873F;
+    --card-bg: #FFFDF8;
+    --card-border: #EADFC8;
+    --btn-inactive-bg: #EFE6D4;
+    --btn-inactive-border: #E3D6B8;
+    --shadow: rgba(90, 60, 30, 0.10) 0px 2px 18px 0px;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+  body{
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    color: var(--text);
+    background: radial-gradient(at 50% 0%, #FAF5EA 0%, #F6F1E6 55%, #EFE6D4 100%);
+    min-height: 100vh;
+    padding: 40px 16px 80px;
+  }
+  .wrap{ max-width: 620px; margin: 0 auto; }
+  header{ text-align:center; margin-bottom: 24px; }
+  .glyph{ font-size: 22px; margin-bottom: 6px; }
+  h1{ font-size: 27.2px; color: var(--maroon-dark); margin: 0 0 4px; font-weight: 400; }
+  .date{ font-style: italic; color: var(--muted); margin-bottom: 4px; }
+
+  .card{
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  .label{
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0 0 14px;
+  }
+  .quote{ font-size: 20.5px; line-height: 1.5; margin: 0 0 10px; }
+  .attrib{ font-style: italic; color: var(--muted); margin-bottom: 14px; }
+  blockquote{
+    margin: 0;
+    padding-left: 14px;
+    border-left: 3px solid var(--gold);
+    color: var(--text);
+  }
+  .divider{
+    border: none;
+    border-top: 1px solid var(--card-border);
+    margin: 18px 0;
+  }
+  .link-btn{
+    background:none; border:none; padding:0; margin:0;
+    font-family: inherit; font-size: 15px; color: var(--maroon);
+    text-decoration: underline; cursor: pointer;
+  }
+  .link-btn:hover{ color: var(--maroon-dark); }
+  a.outbound{
+    color: var(--maroon);
+    text-decoration: underline;
+    font-size: 15.5px;
+  }
+  .lead{ color: var(--muted); margin: 0 0 10px; font-size: 15.5px; }
+
+  input[type="text"]{
+    font-family: inherit;
+    font-size: 15.5px;
+    color: var(--text);
+  }
+
+  .visio-img-wrap{
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    margin-bottom: 10px;
+  }
+  .visio-img-wrap img{ display:block; width:100%; height:auto; max-height: 360px; object-fit: cover; }
+  .visio-caption{ font-style: italic; color: var(--muted); font-size: 14.5px; }
+  .visio-credit{ font-size: 12px; color: #9C8F7C; margin-top: 2px; }
+
+  .sacred-word-input{
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--btn-inactive-border);
+    background: transparent;
+    padding: 6px 2px;
+    font-style: italic;
+    color: var(--gold);
+    outline: none;
+    margin-bottom: 22px;
+  }
+  .sacred-word-input::placeholder{ color: var(--gold); opacity: .7; font-style: italic; }
+
+  .timer-stage{ display:flex; flex-direction:column; align-items:center; }
+  .ring{
+    width: 170px; height: 170px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    background: conic-gradient(var(--maroon) calc(var(--pct, 0) * 1%), rgba(109,44,58,0.15) 0);
+    margin-bottom: 18px;
+    transition: background 0.3s linear;
+  }
+  .sphere{
+    width: 150px; height: 150px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #F3E2AE 0%, #D9B25E 55%, #B3873F 100%);
+    border: 1px solid var(--maroon);
+    display:flex; align-items:center; justify-content:center;
+    font-style: italic; color: var(--maroon-dark); font-size: 15px;
+  }
+  .countdown{ font-size: 30px; letter-spacing: 1px; margin-bottom: 16px; color: var(--text); }
+  .bgsound-row{ margin-bottom: 18px; text-align:center; }
+  .bgsound-label{ display:block; font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+  .bgsound-options{ display:flex; gap: 8px; flex-wrap: wrap; justify-content:center; }
+  .presets{ display:flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; justify-content:center; }
+  .preset-btn{
+    font-family: inherit; font-size: 13.5px;
+    padding: 7px 16px; border-radius: 20px; cursor: pointer;
+    background: var(--btn-inactive-bg); color: var(--muted);
+    border: 1px solid var(--btn-inactive-border);
+  }
+  .preset-btn.active{ background: var(--maroon); color:#fff; border-color: var(--maroon); }
+  .preset-btn:disabled{ opacity:.55; cursor:not-allowed; }
+  .controls{ display:flex; gap: 12px; }
+  .ctl-btn{
+    font-family: inherit; font-size: 14.5px;
+    padding: 9px 26px; border-radius: 22px; cursor: pointer;
+    background: var(--maroon); color:#fff; border: 1px solid var(--maroon);
+  }
+  .ctl-btn.secondary{
+    background: transparent; color: var(--muted); border: 1px solid var(--btn-inactive-border);
+  }
+  .ctl-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  footer{
+    text-align:center; color:#9C8F7C; font-size: 12.5px; line-height:1.6;
+    margin-top: 10px;
+  }
+  footer a{ color:#9C8F7C; }
+
+  .fade-in{ animation: fadein .4s ease; }
+  @keyframes fadein{ from{opacity:0; transform: translateY(4px);} to{opacity:1; transform:none;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="glyph">🖋️</div>
+    <h1>Morning Prayer</h1>
+    <div class="date" id="today-date"></div>
+  </header>
+
+  <!-- TODAY'S WORD -->
+  <section class="card">
+    <p class="label">Today's Reflection</p>
+    <p class="quote" id="quote-text"></p>
+    <p class="attrib">— <span id="quote-author"></span></p>
+    <blockquote id="quote-prompt"></blockquote>
+    <div id="second-quote-block" style="display:none; margin-top:18px;">
+      <hr class="divider" />
+      <p class="quote fade-in" id="quote2-text" style="font-size:18px;"></p>
+      <p class="attrib fade-in" id="quote2-author"></p>
+      <blockquote class="fade-in" id="quote2-prompt"></blockquote>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="link-btn" id="another-quote-btn">Show me another quote →</button>
+    </div>
+  </section>
+
+  <!-- TODAY'S SCRIPTURE READINGS -->
+  <section class="card">
+    <p class="label">Today's Scripture Readings</p>
+    <p class="lead">The Church's readings appointed for today.</p>
+    <a class="outbound" id="uscc-link" href="#" target="_blank" rel="noopener">Today's Mass Readings — USCCB →</a>
+  </section>
+
+  <!-- SCRIPTURE REFLECTION -->
+  <section class="card">
+    <p class="label">Scripture Reflection</p>
+    <p class="quote" style="font-size:17px; line-height:1.6;" id="scripture-reflection"></p>
+    <p class="attrib" id="scripture-reflection-citation" style="display:none;"></p>
+  </section>
+
+  <!-- VISIO DIVINA -->
+  <section class="card">
+    <p class="label">Visio Divina</p>
+    <p class="lead">A single image, offered for sacred viewing and reflection.</p>
+    <div class="visio-img-wrap">
+      <img id="visio-img" alt="An image for visio divina" />
+    </div>
+    <div class="visio-caption" id="visio-caption"></div>
+    <div class="visio-credit">Photograph via Unsplash</div>
+  </section>
+
+  <!-- SILENT PRAYER -->
+  <section class="card">
+    <p class="label" style="text-align:center;">Silent Prayer</p>
+    <input type="text" class="sacred-word-input" id="sacred-word" placeholder="a sacred word (optional)" />
+    <div class="bgsound-row">
+      <span class="bgsound-label">Background sound</span>
+      <div class="bgsound-options">
+        <button class="preset-btn bgsound-btn active" data-sound="none">No sound</button>
+        <button class="preset-btn bgsound-btn" data-sound="chant">Gregorian Chant</button>
+        <button class="preset-btn bgsound-btn" data-sound="soundscape">Soundscape</button>
+      </div>
+    </div>
+    <div class="timer-stage">
+      <div class="ring" id="ring" style="--pct:0;">
+        <div class="sphere">Be still</div>
+      </div>
+      <div class="countdown" id="countdown">20:00</div>
+      <div class="presets">
+        <button class="preset-btn" data-min="10">10 min</button>
+        <button class="preset-btn" data-min="15">15 min</button>
+        <button class="preset-btn active" data-min="20">20 min</button>
+        <button class="preset-btn" data-min="30">30 min</button>
+      </div>
+      <div class="controls">
+        <button class="ctl-btn" id="begin-btn">Begin</button>
+        <button class="ctl-btn secondary" id="reset-btn" disabled>Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Contemplative lines are drawn from the Christian mystical tradition, offered here for personal
+    reflection rather than as verbatim scholarly citation. The Scripture Reflection above is generated
+    from that day's actual reading citations and is devotional in nature, not official Church commentary;
+    for the Church's own daily Mass readings, see the USCCB link above. Visio Divina photographs are
+    sourced from Unsplash. Gregorian Chant audio is a public-domain recording via the Internet Archive.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Date helpers ----------
+  var today = new Date();
+  var dateStr = today.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('today-date').textContent = dateStr;
+
+  function dayOfYear(d){
+    var start = new Date(d.getFullYear(), 0, 0);
+    var diff = d - start;
+    return Math.floor(diff / 86400000);
+  }
+  var doy = dayOfYear(today);
+  var todayKey = today.toISOString().slice(0,10);
+
+  // USCCB link uses MMDDYY
+  var mm = String(today.getMonth()+1).padStart(2,'0');
+  var dd = String(today.getDate()).padStart(2,'0');
+  var yy = String(today.getFullYear()).slice(-2);
+  document.getElementById('uscc-link').href = 'https://bible.usccb.org/bible/readings/' + mm + dd + yy + '.cfm';
+
+  // ---------- Today's Word ----------
+  var QUOTES = [
+    { text: "We are already one. But we imagine that we are not.", author: "Thomas Merton",
+      prompt: "Who do you feel separate from today? Can you hold them, even briefly, as already one with you?" },
+    { text: "All shall be well, and all shall be well, and all manner of thing shall be well.", author: "Julian of Norwich",
+      prompt: "What are you carrying today that needs to rest, for a moment, in that promise?" },
+    { text: "Let nothing disturb you, let nothing frighten you; all things are passing, God never changes.", author: "Teresa of Ávila",
+      prompt: "What is passing, right now, that you've been treating as permanent?" },
+    { text: "God is at home, it is we who have gone out for a walk.", author: "Meister Eckhart",
+      prompt: "Where might you return to, today, that you never really left?" },
+    { text: "We ought not to be weary of doing little things for the love of God.", author: "Brother Lawrence",
+      prompt: "What small, ordinary task today could become a prayer if you did it slowly enough?" },
+    { text: "Silence is God's first language; everything else is a poor translation.", author: "Thomas Keating",
+      prompt: "Where could you make ten minutes of unnecessary silence today?" },
+    { text: "Our heart is restless until it rests in you.", author: "Augustine of Hippo",
+      prompt: "What has your restlessness been chasing lately, and what is it really asking for?" }
+  ];
+
+  function seededIndex(seed, len){ return ((seed % len) + len) % len; }
+
+  var primaryIdx = seededIndex(doy, QUOTES.length);
+  var q = QUOTES[primaryIdx];
+  document.getElementById('quote-text').textContent = '“' + q.text + '”';
+  document.getElementById('quote-author').textContent = q.author;
+  document.getElementById('quote-prompt').textContent = q.prompt;
+
+  // shuffled queue of the remaining quotes, for "show me another"
+  var remaining = QUOTES.map(function(_,i){return i;}).filter(function(i){return i!==primaryIdx;});
+  for (var i = remaining.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = remaining[i]; remaining[i] = remaining[j]; remaining[j] = tmp;
+  }
+  var queuePos = 0;
+  document.getElementById('another-quote-btn').addEventListener('click', function(){
+    if (remaining.length === 0) return;
+    var idx = remaining[queuePos % remaining.length];
+    queuePos++;
+    var q2 = QUOTES[idx];
+    document.getElementById('quote2-text').textContent = '“' + q2.text + '”';
+    document.getElementById('quote2-author').textContent = '— ' + q2.author;
+    document.getElementById('quote2-prompt').textContent = q2.prompt;
+    document.getElementById('second-quote-block').style.display = 'block';
+  });
+
+  // ---------- Scripture Reflection ----------
+  // Generic fallback pool, used only if the live, reading-specific reflection
+  // (fetched from the Netlify Function below) is unavailable.
+  var REFLECTIONS = [
+    "The readings often move through struggle before arriving at consolation. If today's passage feels difficult, sit with the difficulty before reaching for the resolution — the struggle is part of the prayer.",
+    "Notice who speaks and who listens in today's Gospel. Ask where you find yourself in the scene — and where you might be invited to stand instead.",
+    "Scripture rarely explains itself all at once. Let one image or phrase from today's reading stay with you through the day, rather than trying to resolve its meaning right now.",
+    "Try reading today's passage the way you'd read a letter from someone who loves you — expecting to be addressed personally, not merely informed.",
+    "Today's reading likely holds both an invitation and a cost. Naming the cost honestly isn't a failure of faith; it's often where the real prayer begins.",
+    "Consider what today's passage assumes you already know about God's character. Does the shape of your day so far reflect that assumption, or quietly contradict it?",
+    "The lectionary rarely gives an isolated verse — today's reading is part of a longer story. If a detail puzzles you, it may simply be pointing beyond itself to the fuller narrative."
+  ];
+  var fallbackReflection = REFLECTIONS[seededIndex(doy, REFLECTIONS.length)];
+
+  var reflectionTextEl = document.getElementById('scripture-reflection');
+  var reflectionCiteEl = document.getElementById('scripture-reflection-citation');
+  reflectionTextEl.textContent = 'Reflecting on today’s readings…';
+
+  function renderScriptureReflection(text, citation, label){
+    reflectionTextEl.textContent = text;
+    if (citation) {
+      reflectionCiteEl.textContent = (label || 'Reading') + ' — ' + citation;
+      reflectionCiteEl.style.display = 'block';
+    } else {
+      reflectionCiteEl.style.display = 'none';
+    }
+  }
+
+  var SCRIPTURE_CACHE_KEY = 'morningPrayerScriptureReflectionCache';
+  function getCachedScriptureReflection(){
+    try {
+      var cached = JSON.parse(localStorage.getItem(SCRIPTURE_CACHE_KEY) || 'null');
+      if (cached && cached.date === todayKey && cached.reflection) return cached;
+    } catch(e){}
+    return null;
+  }
+  function setCachedScriptureReflection(data){
+    try {
+      localStorage.setItem(SCRIPTURE_CACHE_KEY, JSON.stringify({
+        date: todayKey, reflection: data.reflection, citation: data.citation, label: data.label
+      }));
+    } catch(e){}
+  }
+
+  var cachedScripture = getCachedScriptureReflection();
+  if (cachedScripture) {
+    renderScriptureReflection(cachedScripture.reflection, cachedScripture.citation, cachedScripture.label);
+  } else {
+    fetch('/.netlify/functions/scripture-reflection?date=' + todayKey)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data && data.reflection) {
+          renderScriptureReflection(data.reflection, data.citation, data.label);
+          setCachedScriptureReflection(data);
+        } else {
+          renderScriptureReflection(fallbackReflection, null, null);
+        }
+      })
+      .catch(function(){
+        renderScriptureReflection(fallbackReflection, null, null);
+      });
+  }
+
+  // ---------- Visio Divina ----------
+  var IMAGES = [
+    { id: "photo-1506905925346-21bda4d32df4", caption: "Above the clouds, at first light." },
+    { id: "photo-1441974231531-c6227db76b6e", caption: "A path through quiet trees." },
+    { id: "photo-1470071459604-3b5ec3a7fe05", caption: "Mist lifting over open land." },
+    { id: "photo-1439066615861-d1af74d74000", caption: "Stillness at the water's edge." },
+    { id: "photo-1506744038136-46273834b3fb", caption: "Mountains waking in the haze." },
+    { id: "photo-1500534623283-312aade485b7", caption: "Light breaking over the ridge." }
+  ];
+  var img = IMAGES[seededIndex(doy, IMAGES.length)];
+  document.getElementById('visio-img').src = 'https://images.unsplash.com/' + img.id + '?auto=format&fit=crop&w=1200&q=80';
+  document.getElementById('visio-caption').textContent = img.caption;
+
+  // ---------- Audio: chime + background sound (Web Audio API) ----------
+  var audioCtx = null;
+  function getAudioCtx(){
+    if (!audioCtx) {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  // Soft bell-like chime, synthesized (no audio file needed). Ascending triad
+  // to open the silence, descending triad to close it.
+  function playChime(isEnd){
+    var ctx = getAudioCtx();
+    var now = ctx.currentTime;
+    var freqs = isEnd ? [783.99, 659.25, 523.25] : [523.25, 659.25, 783.99];
+    freqs.forEach(function(freq, i){
+      var start = now + i * 0.1;
+      var osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(0.15, start + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + 2.4);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 2.5);
+    });
+  }
+
+  var BG_VOLUME = 0.35;
+  var bgAudioEl = null;   // <audio> element, used for the Gregorian Chant recording
+  var bgSynth = null;     // active Web Audio nodes, used for synthesized options
+
+  function stopBackgroundSound(){
+    if (bgAudioEl) {
+      bgAudioEl.pause();
+      bgAudioEl.currentTime = 0;
+    }
+    if (bgSynth) {
+      var ctx = getAudioCtx();
+      var t = ctx.currentTime;
+      bgSynth.gain.gain.cancelScheduledValues(t);
+      bgSynth.gain.gain.setValueAtTime(bgSynth.gain.gain.value, t);
+      bgSynth.gain.gain.linearRampToValueAtTime(0.0001, t + 0.6);
+      bgSynth.stopAt(t + 0.7);
+      bgSynth = null;
+    }
+  }
+
+  // Filtered noise -- reads as a soft, continuous ocean/rain soundscape.
+  function startSoundscape(){
+    var ctx = getAudioCtx();
+    var bufferSize = 2 * ctx.sampleRate;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    var lastOut = 0;
+    for (var i = 0; i < bufferSize; i++){
+      var white = Math.random() * 2 - 1;
+      lastOut = (lastOut + 0.02 * white) / 1.02;
+      data[i] = lastOut * 3.5;
+    }
+    var noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 700;
+
+    var lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.08;
+    var lfoGain = ctx.createGain();
+    lfoGain.gain.value = 300;
+    lfo.connect(lfoGain).connect(filter.frequency);
+
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(BG_VOLUME, ctx.currentTime + 2.5);
+
+    noise.connect(filter).connect(master).connect(ctx.destination);
+    noise.start();
+    lfo.start();
+
+    return {
+      gain: master,
+      stopAt: function(time){ noise.stop(time); lfo.stop(time); }
+    };
+  }
+
+  function startBackgroundSound(){
+    stopBackgroundSound();
+    if (selectedBgSound === 'chant') {
+      if (!bgAudioEl) {
+        bgAudioEl = new Audio('gregorian-chant.mp3');
+        bgAudioEl.loop = true;
+      }
+      bgAudioEl.volume = BG_VOLUME;
+      bgAudioEl.currentTime = 0;
+      bgAudioEl.play().catch(function(){});
+    } else if (selectedBgSound === 'soundscape') {
+      bgSynth = startSoundscape();
+    }
+  }
+
+  // ---------- Background sound picker ----------
+  var bgSoundButtons = Array.prototype.slice.call(document.querySelectorAll('.bgsound-btn'));
+  var BG_SOUND_KEY = 'morningPrayerBackgroundSound';
+  var VALID_BG_SOUNDS = ['none', 'chant', 'soundscape'];
+  var selectedBgSound = (function(){
+    try {
+      var stored = localStorage.getItem(BG_SOUND_KEY);
+      return VALID_BG_SOUNDS.indexOf(stored) !== -1 ? stored : 'none';
+    } catch(e){ return 'none'; }
+  })();
+  bgSoundButtons.forEach(function(btn){
+    if (btn.getAttribute('data-sound') === selectedBgSound) btn.classList.add('active');
+    else btn.classList.remove('active');
+    btn.addEventListener('click', function(){
+      if (running) return;
+      selectedBgSound = btn.getAttribute('data-sound');
+      bgSoundButtons.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      try { localStorage.setItem(BG_SOUND_KEY, selectedBgSound); } catch(e){}
+    });
+  });
+
+  // ---------- Silent Prayer timer ----------
+  var presetButtons = Array.prototype.slice.call(document.querySelectorAll('.preset-btn:not(.bgsound-btn)'));
+  var countdownEl = document.getElementById('countdown');
+  var ringEl = document.getElementById('ring');
+  var beginBtn = document.getElementById('begin-btn');
+  var resetBtn = document.getElementById('reset-btn');
+
+  var selectedMinutes = 20;
+  var totalSeconds = selectedMinutes * 60;
+  var remainingSeconds = totalSeconds;
+  var timerInterval = null;
+  var running = false;
+
+  function formatTime(s){
+    var m = Math.floor(s / 60);
+    var sec = s % 60;
+    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  }
+  function updateDisplay(){
+    countdownEl.textContent = formatTime(remainingSeconds);
+    var pct = totalSeconds > 0 ? ((totalSeconds - remainingSeconds) / totalSeconds) * 100 : 0;
+    ringEl.style.setProperty('--pct', pct.toFixed(2));
+  }
+  updateDisplay();
+
+  presetButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if (running) return;
+      selectedMinutes = parseInt(btn.getAttribute('data-min'), 10);
+      totalSeconds = selectedMinutes * 60;
+      remainingSeconds = totalSeconds;
+      presetButtons.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      updateDisplay();
+      resetBtn.disabled = true;
+    });
+  });
+
+  beginBtn.addEventListener('click', function(){
+    if (running) return;
+    running = true;
+    playChime(false);
+    startBackgroundSound();
+    beginBtn.disabled = true;
+    presetButtons.forEach(function(b){ b.disabled = true; });
+    bgSoundButtons.forEach(function(b){ b.disabled = true; });
+    resetBtn.disabled = false;
+    timerInterval = setInterval(function(){
+      remainingSeconds--;
+      if (remainingSeconds <= 0){
+        remainingSeconds = 0;
+        updateDisplay();
+        clearInterval(timerInterval);
+        running = false;
+        playChime(true);
+        stopBackgroundSound();
+        beginBtn.disabled = false;
+        presetButtons.forEach(function(b){ b.disabled = false; });
+        bgSoundButtons.forEach(function(b){ b.disabled = false; });
+        return;
+      }
+      updateDisplay();
+    }, 1000);
+  });
+
+  resetBtn.addEventListener('click', function(){
+    clearInterval(timerInterval);
+    running = false;
+    stopBackgroundSound();
+    remainingSeconds = totalSeconds;
+    beginBtn.disabled = false;
+    presetButtons.forEach(function(b){ b.disabled = false; });
+    bgSoundButtons.forEach(function(b){ b.disabled = false; });
+    resetBtn.disabled = true;
+    updateDisplay();
+  });
+
+})();
+</script>
+</body>
+</html>
