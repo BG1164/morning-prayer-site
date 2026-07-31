@@ -531,6 +531,26 @@
     });
   });
 
+  // ---------- Screen wake lock ----------
+  // Keeps the screen from automatically sleeping/locking while a timed
+  // session is running. A locked/sleeping screen causes mobile browsers to
+  // throttle or fully suspend page timers, which is why the countdown could
+  // appear to "pause" partway through.
+  var wakeLock = null;
+  function requestWakeLock(){
+    if (!('wakeLock' in navigator)) return;
+    navigator.wakeLock.request('screen').then(function(lock){
+      wakeLock = lock;
+      wakeLock.addEventListener('release', function(){ wakeLock = null; });
+    }).catch(function(){ /* not available, or permission denied -- ignore */ });
+  }
+  function releaseWakeLock(){
+    if (wakeLock) {
+      wakeLock.release().catch(function(){});
+      wakeLock = null;
+    }
+  }
+
   // ---------- Silent Prayer timer ----------
   var presetButtons = Array.prototype.slice.call(document.querySelectorAll('.preset-btn:not(.bgsound-btn)'));
   var countdownEl = document.getElementById('countdown');
@@ -543,6 +563,7 @@
   var remainingSeconds = totalSeconds;
   var timerInterval = null;
   var running = false;
+  var endTimestamp = null; // epoch ms when the running session should end
 
   function formatTime(s){
     var m = Math.floor(s / 60);
@@ -555,6 +576,33 @@
     ringEl.style.setProperty('--pct', pct.toFixed(2));
   }
   updateDisplay();
+
+  // The countdown is driven off a fixed end timestamp rather than a simple
+  // per-tick decrement. Mobile browsers routinely throttle or fully suspend
+  // setInterval while the screen is locked, so a naive decrement would just
+  // freeze; recomputing from Date.now() each tick means the display always
+  // catches up to the correct value as soon as it's able to run again.
+  function completeSession(){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    running = false;
+    remainingSeconds = 0;
+    updateDisplay();
+    playChime();
+    stopBackgroundSound();
+    releaseWakeLock();
+    beginBtn.disabled = false;
+    presetButtons.forEach(function(b){ b.disabled = false; });
+    bgSoundButtons.forEach(function(b){ b.disabled = false; });
+  }
+
+  function tick(){
+    if (!running) return;
+    var secsLeft = Math.max(0, Math.round((endTimestamp - Date.now()) / 1000));
+    remainingSeconds = secsLeft;
+    updateDisplay();
+    if (secsLeft <= 0) completeSession();
+  }
 
   presetButtons.forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -574,38 +622,40 @@
     running = true;
     playChime();
     startBackgroundSound();
+    requestWakeLock();
     beginBtn.disabled = true;
     presetButtons.forEach(function(b){ b.disabled = true; });
     bgSoundButtons.forEach(function(b){ b.disabled = true; });
     resetBtn.disabled = false;
-    timerInterval = setInterval(function(){
-      remainingSeconds--;
-      if (remainingSeconds <= 0){
-        remainingSeconds = 0;
-        updateDisplay();
-        clearInterval(timerInterval);
-        running = false;
-        playChime();
-        stopBackgroundSound();
-        beginBtn.disabled = false;
-        presetButtons.forEach(function(b){ b.disabled = false; });
-        bgSoundButtons.forEach(function(b){ b.disabled = false; });
-        return;
-      }
-      updateDisplay();
-    }, 1000);
+    endTimestamp = Date.now() + totalSeconds * 1000;
+    remainingSeconds = totalSeconds;
+    updateDisplay();
+    timerInterval = setInterval(tick, 1000);
   });
 
   resetBtn.addEventListener('click', function(){
     clearInterval(timerInterval);
+    timerInterval = null;
     running = false;
     stopBackgroundSound();
+    releaseWakeLock();
     remainingSeconds = totalSeconds;
+    endTimestamp = null;
     beginBtn.disabled = false;
     presetButtons.forEach(function(b){ b.disabled = false; });
     bgSoundButtons.forEach(function(b){ b.disabled = false; });
     resetBtn.disabled = true;
     updateDisplay();
+  });
+
+  // If the tab/screen was hidden (locked) while a session was running,
+  // catch the display up the moment it becomes visible again, and try to
+  // re-acquire the wake lock (the OS releases it automatically on hide).
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible' && running) {
+      tick();
+      if (running && !wakeLock) requestWakeLock();
+    }
   });
 
 })();
