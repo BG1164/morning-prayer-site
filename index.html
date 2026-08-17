@@ -719,10 +719,45 @@
   // of the Silent Prayer timer.
   function playChime(){
     var ctx = getAudioCtx();
-    var now = ctx.currentTime;
-    [0, 1.6, 3.2].forEach(function(offset){
-      playGongStrike(now + offset);
-    });
+    var strikeAll = function(){
+      // A small lead-in so the first strike is never scheduled in the past.
+      // If it were, all three would fire at once and sound like a single gong.
+      var now = ctx.currentTime + 0.06;
+      [0, 1.6, 3.2].forEach(function(offset){
+        playGongStrike(now + offset);
+      });
+    };
+    // If the browser suspended the audio engine while the session was running,
+    // wait for it to actually resume before scheduling -- a suspended context
+    // has a frozen clock and silently drops anything scheduled against it.
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(strikeAll).catch(strikeAll);
+    } else {
+      strikeAll();
+    }
+  }
+
+  // Browsers suspend an idle audio engine after a few minutes of silence.
+  // During a long, quiet session that would leave nothing able to ring the
+  // closing gongs, so an inaudible tone is kept running for the duration of
+  // the session purely to keep the engine awake.
+  var keepAliveOsc = null;
+  function startAudioKeepAlive(){
+    stopAudioKeepAlive();
+    var ctx = getAudioCtx();
+    var osc = ctx.createOscillator();
+    var g = ctx.createGain();
+    osc.frequency.value = 30;
+    g.gain.value = 0.0001; // far below the threshold of hearing
+    osc.connect(g).connect(ctx.destination);
+    osc.start();
+    keepAliveOsc = osc;
+  }
+  function stopAudioKeepAlive(){
+    if (keepAliveOsc) {
+      try { keepAliveOsc.stop(); } catch(e){}
+      keepAliveOsc = null;
+    }
   }
 
   var BG_VOLUME = 0.35;
@@ -883,6 +918,9 @@
     playChime();
     stopBackgroundSound();
     releaseWakeLock();
+    // Let the keep-alive tone run on until the three closing gongs have fully
+    // rung out, then shut it down.
+    setTimeout(stopAudioKeepAlive, 12000);
     beginBtn.disabled = false;
     presetButtons.forEach(function(b){ b.disabled = false; });
     bgSoundButtons.forEach(function(b){ b.disabled = false; });
@@ -912,6 +950,7 @@
   beginBtn.addEventListener('click', function(){
     if (running) return;
     running = true;
+    startAudioKeepAlive();
     playChime();
     startBackgroundSound();
     requestWakeLock();
@@ -930,6 +969,7 @@
     timerInterval = null;
     running = false;
     stopBackgroundSound();
+    stopAudioKeepAlive();
     releaseWakeLock();
     remainingSeconds = totalSeconds;
     endTimestamp = null;
