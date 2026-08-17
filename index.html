@@ -719,22 +719,19 @@
   // of the Silent Prayer timer.
   function playChime(){
     var ctx = getAudioCtx();
-    var strikeAll = function(){
-      // A small lead-in so the first strike is never scheduled in the past.
-      // If it were, all three would fire at once and sound like a single gong.
-      var now = ctx.currentTime + 0.06;
-      [0, 1.6, 3.2].forEach(function(offset){
-        playGongStrike(now + offset);
-      });
-    };
-    // If the browser suspended the audio engine while the session was running,
-    // wait for it to actually resume before scheduling -- a suspended context
-    // has a frozen clock and silently drops anything scheduled against it.
-    if (ctx.state === 'suspended') {
-      ctx.resume().then(strikeAll).catch(strikeAll);
-    } else {
-      strikeAll();
-    }
+    // Nudge a sleeping audio engine awake, but never wait on that promise
+    // before scheduling. On some browsers (notably on phones) it resolves
+    // late or not at all, and deferring the scheduling behind it is what
+    // caused gongs to be missed entirely.
+    if (ctx.state === 'suspended') ctx.resume().catch(function(){});
+    // A suspended context has a frozen clock, so strikes scheduled against it
+    // remain in the future and simply ring out once it wakes up.
+    // The small lead-in keeps the first strike from landing in the past,
+    // which would collapse all three into a single gong.
+    var now = ctx.currentTime + 0.06;
+    [0, 1.6, 3.2].forEach(function(offset){
+      playGongStrike(now + offset);
+    });
   }
 
   // Browsers suspend an idle audio engine after a few minutes of silence.
