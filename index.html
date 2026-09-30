@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="app-version" content="2026-09-30a" />
 <title>Morning Prayer</title>
 <style>
   :root{
@@ -1876,6 +1877,44 @@
       tick();
       if (running && !wakeLock) requestWakeLock();
     }
+  });
+
+  // ---------- Stay up to date ----------
+  // iPads and phones often reopen this page from memory instead of downloading
+  // it again, so a change published on the server may not appear. Whenever the
+  // page is opened or brought back to the front, quietly fetch the current page
+  // and compare its app-version tag with ours; if they differ, reload.
+  // Never reloads during a running session. A per-tab note prevents reload loops.
+  // IMPORTANT: change the app-version <meta> tag in <head> with every update.
+  var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
+  var versionCheckInFlight = false;
+  var lastVersionCheck = 0;
+  function checkForNewVersion(){
+    if (running || versionCheckInFlight || !APP_VERSION || !window.fetch) return;
+    if (Date.now() - lastVersionCheck < 60000) return;
+    lastVersionCheck = Date.now();
+    versionCheckInFlight = true;
+    fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ return r.ok ? r.text() : ''; })
+      .then(function(html){
+        var m = html.match(/<meta name="app-version" content="([^"]+)"/);
+        if (!m || m[1] === APP_VERSION || running) return;
+        var key = 'morningPrayerReloadedFor';
+        try {
+          if (sessionStorage.getItem(key) === m[1]) return;
+          sessionStorage.setItem(key, m[1]);
+        } catch(e){}
+        location.reload();
+      })
+      .catch(function(){})
+      .then(function(){ versionCheckInFlight = false; });
+  }
+  checkForNewVersion();
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') checkForNewVersion();
+  });
+  window.addEventListener('pageshow', function(e){
+    if (e.persisted) { lastVersionCheck = 0; checkForNewVersion(); }
   });
 
 })();
